@@ -1,101 +1,157 @@
-import Image from "next/image";
+'use client'
+import React, { useState } from 'react';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+// Type definitions
+type CellValue = string;
+type CellGrid = CellValue[][];
+type CellPosition = [number, number]; // [row, col]
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+interface SpreadsheetProps {
+  initialRows?: number;
+  initialCols?: number;
 }
+
+const Spreadsheet: React.FC<SpreadsheetProps> = ({ 
+  initialRows = 16, 
+  initialCols = 16 
+}) => {
+  const ROWS = initialRows;
+  const COLS = initialCols;
+
+  // State with type annotations
+  const [cells, setCells] = useState<CellGrid>(
+    Array(ROWS).fill('').map(() => Array(COLS).fill(''))
+  );
+  const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [startCell, setStartCell] = useState<CellPosition | null>(null);
+
+  // Convert column number to letter (A-P for 16 columns)
+  const getColumnLabel = (index: number): string => {
+    return String.fromCharCode(65 + index);
+  };
+
+  const handleCellChange = (rowIndex: number, colIndex: number, value: string): void => {
+    const newCells = [...cells];
+    newCells[rowIndex][colIndex] = value;
+    setCells(newCells);
+  };
+
+  const calculateSum = (): string => {
+    let sum = 0;
+    selectedCells.forEach(([row, col]) => {
+      const value = parseFloat(cells[row][col]);
+      if (!isNaN(value)) {
+        sum += value;
+        console.log(value);
+      }
+    });
+    return sum.toFixed(2);
+  };
+
+  const handleMouseDown = (rowIndex: number, colIndex: number): void => {
+    setIsDragging(true);
+    setStartCell([rowIndex, colIndex]);
+    setSelectedCells([[rowIndex, colIndex]]);
+  };
+
+  const handleMouseEnter = (rowIndex: number, colIndex: number): void => {
+    if (!isDragging || !startCell) return;
+
+    const [startRow, startCol] = startCell;
+    const newSelectedCells: CellPosition[] = [];
+
+    // Calculate the range of cells to select
+    const minRow = Math.min(startRow, rowIndex);
+    const maxRow = Math.max(startRow, rowIndex);
+    const minCol = Math.min(startCol, colIndex);
+    const maxCol = Math.max(startCol, colIndex);
+
+    // Add all cells in the range to selection
+    console.log(minRow, maxRow, minCol, maxCol, selectedCells);
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        newSelectedCells.push([r, c]);
+        console.log(r, c);
+      }
+    }
+
+    setSelectedCells(newSelectedCells);
+  };
+
+  const handleMouseUp = (): void => {
+    setIsDragging(false);
+  };
+
+  const isCellSelected = (rowIndex: number, colIndex: number): boolean => {
+    return selectedCells.some(([r, c]) => r === rowIndex && c === colIndex);
+  };
+
+  return (
+    <>
+      <div className="p-4 flex flex-row justify-center text-3xl">
+        <h1>Excel sheet</h1>
+      </div>
+      <div className="p-4 flex flex-col justify-center">
+        <div className="overflow-x-auto border border-gray-300 rounded-sm p-4 shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">Sum of selected cells:</span>
+            <span className="bg-blue-100 px-3 py-1 rounded">{calculateSum()}</span>
+          </div>
+        </div>
+      </div>
+      <div className="p-4">
+        <div className="overflow-x-auto border border-gray-300 rounded-lg shadow-lg">
+          <div className="flex flex-col">
+            {/* Header Row */}
+            <div className="flex bg-gray-50">
+              <div className="w-12 h-10 flex items-center justify-center border-b border-r border-gray-300 bg-gray-100 font-bold sticky left-0 z-20">
+                0
+              </div>
+              {Array(COLS).fill(0).map((_, colIndex) => (
+                <div
+                  key={`col-${colIndex}`}
+                  className="w-24 h-10 flex items-center justify-center border-b border-r border-gray-300 bg-gray-100 font-bold"
+                >
+                  {getColumnLabel(colIndex)}
+                </div>
+              ))}
+            </div>
+
+            {/* Grid Rows */}
+            {Array(ROWS).fill(0).map((_, rowIndex) => (
+              <div key={`row-${rowIndex}`} className="flex">
+                <div className="w-12 h-8 flex items-center justify-center border-b border-r border-gray-300 bg-gray-100 font-bold sticky left-0 z-10">
+                  {rowIndex + 1}
+                </div>
+                {Array(COLS).fill(0).map((_, colIndex) => (
+                  <div
+                    key={`cell-${rowIndex}-${colIndex}`}
+                    className={`w-24 h-8 border-b border-r border-gray-300 ${
+                      isCellSelected(rowIndex, colIndex) ? 'bg-blue-100' : ''
+                    }`}
+                    onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                    onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                    onMouseUp={handleMouseUp}
+                  >
+                    <input
+                      type="text"
+                      value={cells[rowIndex][colIndex]}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                        handleCellChange(rowIndex, colIndex, e.target.value)
+                      }
+                      className="w-full h-full px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-transparent"
+                      aria-label={`${getColumnLabel(colIndex)}${rowIndex + 1}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Spreadsheet;
