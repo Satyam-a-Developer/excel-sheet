@@ -25,8 +25,6 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
       .map(() => Array(COLS).fill(""))
   );
   const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
-  // const [sumvalue ,setsumvalue ] = useState<number>(0);
-  const [currentValue, setCurrentValue] = useState<string>();
   const [shouldUpdate, setShouldUpdate] = useState<boolean>(false);
   const [lastSelectedCell, setLastSelectedCell] = useState<CellPosition | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -51,7 +49,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
       setCells(newCells);
       setShouldUpdate(false);
     }
-  }, [shouldUpdate, lastSelectedCell, ]);
+  }, [shouldUpdate, lastSelectedCell,cells]);
 
 
   const handleCellChange = (
@@ -62,7 +60,6 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
     const newCells = [...cells];
     newCells[rowIndex][colIndex] = value;
     setCells(newCells);
-    setCurrentValue(value);
   };
 
 
@@ -126,7 +123,6 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
     setIsDragging(true);
     setStartCell([rowIndex, colIndex]);
     setSelectedCells([[rowIndex, colIndex]]);
-    setCurrentValue(cells[rowIndex][colIndex]);
   };
 
   const handleMouseEnter = (rowIndex: number, colIndex: number): void => {
