@@ -172,7 +172,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
         </div>
       </div>
       <div className="p-4">
-        <div className="overflow-x-auto border  rounded-lg shadow-lg">
+        <div className="overflow-x-auto border border-gray-300 rounded-lg shadow-lg">
           <div className="flex flex-col">
             <div className="flex ">
               <div className="w-12 h-10 flex items-center justify-center border-b border-r border-gray-300  font-bold sticky left-0 z-20">
@@ -204,7 +204,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                         key={`cell-${rowIndex}-${colIndex}`}
                         className={`w-24 h-8 border-b border-r border-gray-300 ${
                           isCellSelected(rowIndex, colIndex)
-                            ? "bg-black"
+                            ? "bg-blue-600"
                             : ""
                         }`}
                         onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
@@ -215,7 +215,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                           type="text"
                           value={cells[rowIndex][colIndex]}
                           onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                          className="w-full h-full px-2 focus:outline-none focus:ring-1  bg-transparent"
+                          className="w-full h-full px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-transparent"
                           aria-label={`${getColumnLabel(colIndex)}${rowIndex + 1}`}
                         />
                       </div>
