@@ -5,10 +5,11 @@
 
 
 body {
-  /* color: white; */
+  color: white;
   justify-content: center;
-  /* border: beige; */
-  /* background-color: black; */
+
+  border: beige;
+  background-color: black;
 }
 
 

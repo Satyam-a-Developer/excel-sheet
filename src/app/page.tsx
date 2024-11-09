@@ -1,5 +1,4 @@
 "use client";
-import e from "cors";
 import React, { useState } from "react";
 
 // Type definitions
@@ -26,7 +25,8 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
       .map(() => Array(COLS).fill(""))
   );
   const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
-  const [input , setinput ] = useState( )
+  const [currentValue, setCurrentValue] = useState<string>("");
+  const [lastSelectedCell, setLastSelectedCell] = useState<CellPosition | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [startCell, setStartCell] = useState<CellPosition | null>(null);
 
@@ -34,27 +34,29 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
   const getColumnLabel = (index: number): string => {
     return String.fromCharCode(65 + index);
   };
+
+
+
+
   const handleCellChange = (
     rowIndex: number,
     colIndex: number,
     value: string,
   ): void => {
-
     const newCells = [...cells];
     newCells[rowIndex][colIndex] = value;
     setCells(newCells);
-    // setinput
+    setCurrentValue(value);
+  
   };
-  //Input value change on calulation.
-  const Inputvalue =  (rowIndex:number , colIndex:number) => 
-    {
-      cells[rowIndex][colIndex]
-    }
+
+
   const calculateMultiple = (): string => {
-    let multiple = 1; // Start with 1 instead of 3 as multiplication identity
+    let multiple = 1;
     let hasValidNumber = false;
 
     selectedCells.forEach(([row, col]) => {
+      
       const value = parseFloat(cells[row][col]);
       if (!isNaN(value)) {
         multiple = multiple * value;
@@ -62,7 +64,6 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
       }
     });
 
-    // Return '0.00' if no valid numbers were found
     return hasValidNumber ? multiple.toFixed(2) : "0.00";
   };
 
@@ -77,36 +78,36 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
     return sum.toFixed(2);
   };
 
-  const debugCellSelection = (rowIndex: number, colIndex: number): void => {
-    const columnLetter = String.fromCharCode(65 + colIndex);
-    const displayRow = rowIndex + 1;
-    console.log("Selected Cell Details:");
-    console.log(rowIndex, "this is row index", colIndex, "this is col index");
-    selectedCells.forEach(([row, col]) => {
-      let value = parseFloat(cells[row][col]);
-      console.log(value, "this is value inside the debug function ");
-    });
-  };
-
   const calculateSimpleInterest = (): string => {
-    let simpleInterest = 0;
-    selectedCells.forEach(([row, col]) => {
-      const value = parseFloat(cells[row][col]);
+    if (selectedCells.length < 3) return "0.00";
+    
+    // Assuming first selected cell is principal, second is rate, third is time
+    const [principal, rate, time] = selectedCells.slice(0, 3).map(([row, col]) => {
+      return parseFloat(cells[row][col]) || 0;
     });
-    return simpleInterest.toFixed(2);
+
+    const interest = (principal * rate * time) / 100;
+    return interest.toFixed(2);
   };
 
-  const calculateCompundInterest = (): string => {
-    let compoundInterest = 0;
-    // coming soon
+  const calculateCompoundInterest = (): string => {
+    if (selectedCells.length < 3) return "0.00";
+    
+    // Assuming first selected cell is principal, second is rate, third is time
+    const [principal, rate, time] = selectedCells.slice(0, 3).map(([row, col]) => {
+      return parseFloat(cells[row][col]) || 0;
+    });
+
+    const amount = principal * Math.pow(1 + rate / 100, time);
+    const interest = amount - principal;
+    return interest.toFixed(2);
   };
 
   const handleMouseDown = (rowIndex: number, colIndex: number): void => {
     setIsDragging(true);
     setStartCell([rowIndex, colIndex]);
     setSelectedCells([[rowIndex, colIndex]]);
-    debugCellSelection(rowIndex, colIndex);
-    Inputvalue(rowIndex, colIndex);
+    setCurrentValue(cells[rowIndex][colIndex]);
   };
 
   const handleMouseEnter = (rowIndex: number, colIndex: number): void => {
@@ -115,19 +116,17 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
     const [startRow, startCol] = startCell;
     const newSelectedCells: CellPosition[] = [];
 
-    // Calculate the range of cells to select
     const minRow = Math.min(startRow, rowIndex);
     const maxRow = Math.max(startRow, rowIndex);
     const minCol = Math.min(startCol, colIndex);
     const maxCol = Math.max(startCol, colIndex);
 
-    // Add all cells in the range to selection
     for (let r = minRow; r <= maxRow; r++) {
       for (let c = minCol; c <= maxCol; c++) {
         newSelectedCells.push([r, c]);
       }
     }
-
+    setLastSelectedCell([rowIndex, colIndex]);
     setSelectedCells(newSelectedCells);
   };
 
@@ -147,42 +146,36 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
       <div className="p-4 flex justify-center">
         <div className="overflow-x-auto flex-row flex border border-gray-300 rounded-sm p-4 shadow-lg">
           <div className="flex items-center gap-2 m-10">
-            <span className="font-bold">Sum of selected cells:</span>
-            <span className="bg-blue-100 px-3 py-1 rounded">
+            <span className="font-bold">Sum:</span>
+            <span className=" px-3 py-1 rounded">
               {calculateSum()}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold">Multiple of selected cells:</span>
-            <span className="bg-blue-100 px-3 py-1 rounded">
+            <span className="font-bold">Multiple:</span>
+            <span className=" px-3 py-1 rounded">
               {calculateMultiple()}
             </span>
           </div>
-
           <div className="flex items-center gap-2">
-            <span className="font-bold">
-              Simple interest of selected cells:
-            </span>
-            <span className="bg-blue-100 px-3 py-1 rounded">
+            <span className="font-bold">Simple Interest:</span>
+            <span className=" px-3 py-1 rounded">
               {calculateSimpleInterest()}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold">
-              Compound interest of selected cells:
-            </span>
-            <span className="bg-blue-100 px-3 py-1 rounded">
-              {calculateCompundInterest()}
+            <span className="font-bold">Compound Interest:</span>
+            <span className=" px-3 py-1 rounded">
+              {calculateCompoundInterest()}
             </span>
           </div>
         </div>
       </div>
       <div className="p-4">
-        <div className="overflow-x-auto border border-gray-300 rounded-lg shadow-lg">
+        <div className="overflow-x-auto border  rounded-lg shadow-lg">
           <div className="flex flex-col">
-            {/* Header Row */}
-            <div className="flex bg-gray-50">
-              <div className="w-12 h-10 flex items-center justify-center border-b border-r border-gray-300 bg-gray-100 font-bold sticky left-0 z-20">
+            <div className="flex ">
+              <div className="w-12 h-10 flex items-center justify-center border-b border-r border-gray-300  font-bold sticky left-0 z-20">
                 #
               </div>
               {Array(COLS)
@@ -190,19 +183,18 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                 .map((_, colIndex) => (
                   <div
                     key={`col-${colIndex}`}
-                    className="w-24 h-10 flex items-center justify-center border-b border-r border-gray-300 bg-gray-100 font-bold"
+                    className="w-24 h-10 flex items-center justify-center border-b border-r border-gray-300  font-bold"
                   >
                     {getColumnLabel(colIndex)}
                   </div>
                 ))}
             </div>
 
-            {/* Grid Rows */}
             {Array(ROWS)
               .fill(0)
               .map((_, rowIndex) => (
                 <div key={`row-${rowIndex}`} className="flex">
-                  <div className="w-12 h-8 flex items-center justify-center border-b border-r border-gray-300 bg-gray-100 font-bold sticky left-0 z-10">
+                  <div className="w-12 h-8 flex items-center justify-center border-b border-r border-gray-300  font-bold sticky left-0 z-10">
                     {rowIndex + 1}
                   </div>
                   {Array(COLS)
@@ -216,17 +208,13 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                             : ""
                         }`}
                         onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                        onMouseEnter={() =>
-                          handleMouseEnter(rowIndex, colIndex)
-                        }
+                        onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
                         onMouseUp={handleMouseUp}
                       >
                         <input
                           type="text"
                           value={cells[rowIndex][colIndex]}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            handleCellChange(rowIndex, colIndex,e.target.value)
-                          }
+                          onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
                           className="w-full h-full px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-transparent"
                           aria-label={`${getColumnLabel(colIndex)}${rowIndex + 1}`}
                         />
