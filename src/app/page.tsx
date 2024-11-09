@@ -204,7 +204,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                         key={`cell-${rowIndex}-${colIndex}`}
                         className={`w-24 h-8 border-b border-r border-gray-300 ${
                           isCellSelected(rowIndex, colIndex)
-                            ? "bg-blue-100"
+                            ? "bg-black"
                             : ""
                         }`}
                         onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
@@ -215,7 +215,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                           type="text"
                           value={cells[rowIndex][colIndex]}
                           onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                          className="w-full h-full px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-transparent"
+                          className="w-full h-full px-2 focus:outline-none focus:ring-1  "
                           aria-label={`${getColumnLabel(colIndex)}${rowIndex + 1}`}
                         />
                       </div>
