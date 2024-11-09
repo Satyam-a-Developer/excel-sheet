@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Type definitions
 type CellValue = string;
@@ -25,7 +25,9 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
       .map(() => Array(COLS).fill(""))
   );
   const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
-  const [currentValue, setCurrentValue] = useState<string>("");
+  // const [sumvalue ,setsumvalue ] = useState<number>(0);
+  const [currentValue, setCurrentValue] = useState<string>();
+  const [shouldUpdate, setShouldUpdate] = useState<boolean>(false);
   const [lastSelectedCell, setLastSelectedCell] = useState<CellPosition | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [startCell, setStartCell] = useState<CellPosition | null>(null);
@@ -37,6 +39,20 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
 
 
+  // Add this function to your Spreadsheet component
+  // Add useEffect import if not already imported
+
+  // Inside your component:
+  useEffect(() => {
+    if (shouldUpdate && lastSelectedCell) {
+      const [lastRow, lastCol] = lastSelectedCell;
+      const newCells = [...cells];
+      newCells[lastRow][lastCol] = sumvaule;
+      setCells(newCells);
+      setShouldUpdate(false);
+    }
+  }, [shouldUpdate, lastSelectedCell, ]);
+
 
   const handleCellChange = (
     rowIndex: number,
@@ -47,7 +63,6 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
     newCells[rowIndex][colIndex] = value;
     setCells(newCells);
     setCurrentValue(value);
-  
   };
 
 
@@ -56,7 +71,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
     let hasValidNumber = false;
 
     selectedCells.forEach(([row, col]) => {
-      
+
       const value = parseFloat(cells[row][col]);
       if (!isNaN(value)) {
         multiple = multiple * value;
@@ -75,12 +90,16 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
         sum += value;
       }
     });
+    // setsumvalue(sum);  
     return sum.toFixed(2);
   };
 
+  const sumvaule = calculateSum()
+  
+
   const calculateSimpleInterest = (): string => {
     if (selectedCells.length < 3) return "0.00";
-    
+
     // Assuming first selected cell is principal, second is rate, third is time
     const [principal, rate, time] = selectedCells.slice(0, 3).map(([row, col]) => {
       return parseFloat(cells[row][col]) || 0;
@@ -92,7 +111,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
   const calculateCompoundInterest = (): string => {
     if (selectedCells.length < 3) return "0.00";
-    
+
     // Assuming first selected cell is principal, second is rate, third is time
     const [principal, rate, time] = selectedCells.slice(0, 3).map(([row, col]) => {
       return parseFloat(cells[row][col]) || 0;
@@ -131,6 +150,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
   };
 
   const handleMouseUp = (): void => {
+    setShouldUpdate(true);
     setIsDragging(false);
   };
 
@@ -202,11 +222,10 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                     .map((_, colIndex) => (
                       <div
                         key={`cell-${rowIndex}-${colIndex}`}
-                        className={`w-24 h-8 border-b border-r border-gray-300 ${
-                          isCellSelected(rowIndex, colIndex)
-                            ? "bg-blue-600"
-                            : ""
-                        }`}
+                        className={`w-24 h-8 border-b border-r border-gray-300 ${isCellSelected(rowIndex, colIndex)
+                          ? "bg-blue-600"
+                          : ""
+                          }`}
                         onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
                         onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
                         onMouseUp={handleMouseUp}
