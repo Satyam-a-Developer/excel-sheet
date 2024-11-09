@@ -215,7 +215,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                           type="text"
                           value={cells[rowIndex][colIndex]}
                           onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                          className="w-full h-full px-2 focus:outline-none focus:ring-1  "
+                          className="w-full h-full px-2 focus:outline-none focus:ring-1  bg-transparent"
                           aria-label={`${getColumnLabel(colIndex)}${rowIndex + 1}`}
                         />
                       </div>
