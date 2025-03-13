@@ -18,27 +18,50 @@ const ExcelSheet = () => {
   );
   const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
   const [shouldUpdate, setShouldUpdate] = useState<boolean>(false);
-  const [lastSelectedCell, setLastSelectedCell] = useState<CellPosition | null>(null);
+  const [lastSelectedCell, setLastSelectedCell] = useState<CellPosition | null>(
+    null
+  );
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [startCell, setStartCell] = useState<CellPosition | null>(null);
 
-  // Convert column number to letter (A-P for 16 columns)
   const getColumnLabel = (index: number): string => {
     return String.fromCharCode(65 + index);
   };
 
   const calculateSum = (): string => {
     let sum = 0;
+    let validNumberCount = 0;
+
     selectedCells.forEach(([row, col]) => {
       const value = parseFloat(cells[row][col]);
       if (!isNaN(value)) {
         sum += value;
+        validNumberCount++;
       }
     });
-    return sum.toFixed(2);
+
+    return validNumberCount > 0 ? sum.toFixed(2) : "0.00";
+  };
+
+  const calculateMultiple = (): string => {
+    let multiple = 1;
+    let validNumberCount = 0;
+    const settime = setTimeout(() => {
+      const data = selectedCells.length - 2;
+    }, 5000);
+    selectedCells.forEach(([row, col]) => {
+      const value = parseFloat(cells[row][col]);
+      if (!isNaN(value) && value !== 0) {
+        multiple *= value;
+        validNumberCount++;
+      }
+    });
+
+    return validNumberCount > 0 ? multiple.toFixed(2) : "0.00";
   };
 
   const sumValue = calculateSum();
+  const final: number = Number(sumValue) / 2;
 
   useEffect(() => {
     if (shouldUpdate && lastSelectedCell) {
@@ -53,49 +76,11 @@ const ExcelSheet = () => {
   const handleCellChange = (
     rowIndex: number,
     colIndex: number,
-    value: string,
+    value: string
   ): void => {
     const newCells = [...cells];
     newCells[rowIndex][colIndex] = value;
     setCells(newCells);
-  };
-
-  const calculateMultiple = (): string => {
-    let multiple = 1;
-    let hasValidNumber = false;
-
-    selectedCells.forEach(([row, col]) => {
-      const value = parseFloat(cells[row][col]);
-      if (!isNaN(value)) {
-        multiple = multiple * value;
-        hasValidNumber = true;
-      }
-    });
-
-    return hasValidNumber ? multiple.toFixed(2) : "0.00";
-  };
-
-  const calculateSimpleInterest = (): string => {
-    if (selectedCells.length < 3) return "0.00";
-
-    const [principal, rate, time] = selectedCells.slice(0, 3).map(([row, col]) => {
-      return parseFloat(cells[row][col]) || 0;
-    });
-
-    const interest = (principal * rate * time) / 100;
-    return interest.toFixed(2);
-  };
-
-  const calculateCompoundInterest = (): string => {
-    if (selectedCells.length < 3) return "0.00";
-
-    const [principal, rate, time] = selectedCells.slice(0, 3).map(([row, col]) => {
-      return parseFloat(cells[row][col]) || 0;
-    });
-
-    const amount = principal * Math.pow(1 + rate / 100, time);
-    const interest = amount - principal;
-    return interest.toFixed(2);
   };
 
   const handleMouseDown = (rowIndex: number, colIndex: number): void => {
@@ -135,34 +120,23 @@ const ExcelSheet = () => {
 
   return (
     <>
-      <div className="p-4 flex flex-row justify-center text-3xl">
+      <div className="p-4 flex flex-row align-center justify-center text-3xl">
         <h1>Excel sheet</h1>
+
+      </div>
+      <div className="p-4 flex justify-center text-3xl text-red-500">
+      <h1> * this is not mobile friendly app</h1>
       </div>
       <div className="p-4 flex justify-center">
+
         <div className="overflow-x-auto flex-row flex border border-gray-300 rounded-sm p-4 shadow-lg">
           <div className="flex items-center gap-2 m-10">
             <span className="font-bold">Sum:</span>
-            <span className="px-3 py-1 rounded">
-              {calculateSum()}
-            </span>
+            <span className="px-3 py-1 rounded">{final}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-bold">Multiple:</span>
-            <span className="px-3 py-1 rounded">
-              {calculateMultiple()}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold">Simple Interest:</span>
-            <span className="px-3 py-1 rounded">
-              {calculateSimpleInterest()}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold">Compound Interest:</span>
-            <span className="px-3 py-1 rounded">
-              {calculateCompoundInterest()}
-            </span>
+            <span className="px-3 py-1 rounded">{calculateMultiple()}</span>
           </div>
         </div>
       </div>
@@ -198,18 +172,26 @@ const ExcelSheet = () => {
                       <div
                         key={`cell-${rowIndex}-${colIndex}`}
                         className={`w-24 h-8 border-b border-r border-gray-300 ${
-                          isCellSelected(rowIndex, colIndex) ? "bg-blue-600" : ""
+                          isCellSelected(rowIndex, colIndex)
+                            ? "bg-blue-600"
+                            : ""
                         }`}
                         onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                        onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                        onMouseEnter={() =>
+                          handleMouseEnter(rowIndex, colIndex)
+                        }
                         onMouseUp={handleMouseUp}
                       >
                         <input
                           type="text"
                           value={cells[rowIndex][colIndex]}
-                          onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
+                          onChange={(e) =>
+                            handleCellChange(rowIndex, colIndex, e.target.value)
+                          }
                           className="w-full h-full px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-transparent"
-                          aria-label={`${getColumnLabel(colIndex)}${rowIndex + 1}`}
+                          aria-label={`${getColumnLabel(colIndex)}${
+                            rowIndex + 1
+                          }`}
                         />
                       </div>
                     ))}
