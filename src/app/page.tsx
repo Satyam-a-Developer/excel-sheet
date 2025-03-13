@@ -46,9 +46,6 @@ const ExcelSheet = () => {
   const calculateMultiple = (): string => {
     let multiple = 1;
     let validNumberCount = 0;
-    const settime = setTimeout(() => {
-      const data = selectedCells.length - 2;
-    }, 5000);
     selectedCells.forEach(([row, col]) => {
       const value = parseFloat(cells[row][col]);
       if (!isNaN(value) && value !== 0) {
@@ -122,7 +119,6 @@ const ExcelSheet = () => {
     <>
       <div className="p-4 flex flex-row align-center justify-center text-3xl">
         <h1>Excel sheet</h1>
-
       </div>
       <div className="p-4 flex justify-center text-3xl text-red-500">
       <h1> * this is not mobile friendly app</h1>
